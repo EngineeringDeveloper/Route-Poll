@@ -1,5 +1,7 @@
 import "./App.css";
-import { Map } from "react-map-gl";
+
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import { Map } from "!react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useState } from "react";
 
