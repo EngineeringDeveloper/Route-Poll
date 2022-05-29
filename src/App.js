@@ -22,7 +22,6 @@ function App() {
                 style={{ width: 600, height: 400 }}
                 mapStyle='mapbox://styles/mapbox/streets-v9'
             />
-            <div>{process.env.REACT_APP_MAPBOX_ACCESS_TOKEN}</div>
         </div>
     );
 }
