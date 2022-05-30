@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import "./App.css";
 import { Map, Source, Layer } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -8,14 +8,8 @@ import { useState, useEffect } from "react";
 import { gpx } from "@tmcw/togeojson";
 import testGPX from ".//assets/Saturday Option .gpx";
 import { DOMParser } from "@xmldom/xmldom";
-// const DomParser = require("@xmldom/xmldom").DomParser; // node doesn't have xml parsing or a dom.
 
-// const geojson = {
-//     type: 'FeatureCollection',
-//     features: [
-//       {type: 'Feature', geometry: {type: 'Point', coordinates: [-122.4, 37.8]}}
-//     ]
-//   };
+// examples: http://visgl.github.io/react-map-gl/examples
 
 // https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/#paint-property
 const layerStyle = {
@@ -36,6 +30,8 @@ function App() {
         zoom: 10,
     });
 
+    const [hoverInfo, setHoverInfo] = useState(null);
+
     const [geoInfo, setgeoInfo] = useState({
         source: null,
     });
@@ -45,11 +41,18 @@ function App() {
             .then((r) => r.text())
             .then((text) => {
                 // generate a geojson for a route
-                const gpxDom = new DOMParser().parseFromString(text, 'text/xml')
+                const gpxDom = new DOMParser().parseFromString(
+                    text,
+                    "text/xml"
+                );
                 const geojson = gpx(gpxDom);
                 setgeoInfo({
                     source: (
-                        <Source id='my-data' type='geojson' data={geojson}>
+                        <Source
+                            id='my-data'
+                            type='geojson'
+                            data={geojson}
+                        >
                             <Layer {...layerStyle} />
                         </Source>
                         // <div>Test Finished</div>
@@ -57,8 +60,17 @@ function App() {
                 });
                 // console.log(geojson);
             });
-    }, [])
+    }, []);
 
+    // https://github.com/visgl/react-map-gl/blob/7.0-release/examples/geojson/src/app.tsx
+    const onHover = useCallback((event) => {
+        const {
+            features,
+            point: { x, y },
+        } = event;
+        const hoveredFeature = features && features[0];
+        setHoverInfo(hoveredFeature && { feature: hoveredFeature, x, y });
+    });
     return (
         <div className='App'>
             <Map
@@ -66,9 +78,19 @@ function App() {
                 onMove={(evt) => setViewState(evt.viewState)}
                 style={{ width: 600, height: 400 }}
                 mapStyle='mapbox://styles/mapbox/streets-v9'
+                // onClick={}
+                onMouseMove={onHover}
             >
                 {geoInfo.source}
-                </Map>
+                {hoverInfo && (
+                    <div
+                        className='tooltip'
+                        style={{ left: hoverInfo.x, top: hoverInfo.y }}
+                    >
+                        <div>info: {hoverInfo.feature}</div>
+                    </div>
+                )}
+            </Map>
         </div>
     );
 }
