@@ -101,7 +101,7 @@ function App() {
             <Map
                 {...viewState}
                 onMove={(evt) => setViewState(evt.viewState)}
-                style={{ width: 600, height: 400 }}
+                style={{ width: "100vw", height: "100vh" }}
                 mapStyle='mapbox://styles/mapbox/streets-v9'
                 // onClick={}
                 // onMouseMove={onHover}
