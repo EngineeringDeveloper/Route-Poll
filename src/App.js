@@ -1,13 +1,15 @@
 import React, { useCallback } from "react";
 import "./App.css";
-import { Map, Source, Layer } from "react-map-gl";
+import { Map, Source, Layer, Marker, Popup } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 // get the GPX files.
 import { gpx } from "@tmcw/togeojson";
-import testGPX from ".//assets/Saturday Option .gpx";
+import testGPX from ".//assets/Saturday Option.gpx";
 import { DOMParser } from "@xmldom/xmldom";
+import Pin from "./components/pin.tsx"
+import CAFES from "./assets/cafes.json"
 
 // examples: http://visgl.github.io/react-map-gl/examples
 
@@ -30,11 +32,33 @@ function App() {
         zoom: 10,
     });
 
-    const [hoverInfo, setHoverInfo] = useState(null);
+    // const [hoverInfo, setHoverInfo] = useState(null);
+    const [popupInfo, setPopupInfo] = useState(null);
 
     const [geoInfo, setgeoInfo] = useState({
         source: null,
     });
+
+    const pins = useMemo(
+        () =>
+          CAFES.map((cafe, index) => (
+            <Marker
+              key={`marker-${index}`}
+              longitude={cafe.longitude}
+              latitude={cafe.latitude}
+              anchor="bottom"
+              onClick={e => {
+                // If we let the click event propagates to the map, it will immediately close the popup
+                // with `closeOnClick: true`
+                e.originalEvent.stopPropagation();
+                setPopupInfo(cafe);
+              }}
+            >
+              <Pin />
+            </Marker>
+          )),
+        []
+      );
 
     useEffect(() => {
         fetch(testGPX)
@@ -63,14 +87,15 @@ function App() {
     }, []);
 
     // https://github.com/visgl/react-map-gl/blob/7.0-release/examples/geojson/src/app.tsx
-    const onHover = useCallback((event) => {
-        const {
-            features,
-            point: { x, y },
-        } = event;
-        const hoveredFeature = features && features[0];
-        setHoverInfo(hoveredFeature && { feature: hoveredFeature, x, y });
-    });
+    // const onHover = useCallback((event) => {
+    //     const {
+    //         features,
+    //         point: { x, y },
+    //     } = event;
+    //     const hoveredFeature = features && features[0];
+    //     setHoverInfo(hoveredFeature && { feature: hoveredFeature, x, y });
+    // });
+
     return (
         <div className='App'>
             <Map
@@ -79,17 +104,37 @@ function App() {
                 style={{ width: 600, height: 400 }}
                 mapStyle='mapbox://styles/mapbox/streets-v9'
                 // onClick={}
-                onMouseMove={onHover}
+                // onMouseMove={onHover}
             >
                 {geoInfo.source}
-                {hoverInfo && (
+                {pins}
+                {popupInfo && (
+          <Popup
+            anchor="top"
+            longitude={Number(popupInfo.longitude)}
+            latitude={Number(popupInfo.latitude)}
+            onClose={() => setPopupInfo(null)}
+          >
+            <div>
+              {popupInfo.cafe}, {popupInfo.rating} |{' '}
+              {/* <a
+                target="_new"
+                href={`http://en.wikipedia.org/w/index.php?title=Special:Search&search=${popupInfo.city}, ${popupInfo.state}`}
+              >
+                Wikipedia
+              </a> */}
+            </div>
+            <img width="100%" src={popupInfo.image} />
+          </Popup>
+        )}
+                {/* {hoverInfo && (
                     <div
                         className='tooltip'
                         style={{ left: hoverInfo.x, top: hoverInfo.y }}
                     >
                         <div>info: {hoverInfo.feature}</div>
                     </div>
-                )}
+                )} */}
             </Map>
         </div>
     );
